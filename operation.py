@@ -114,6 +114,7 @@ class Operator():
         """
         self.name = name
         self.device = device
+        self.time_base = 15/60
         for key, value in iteritems(kwargs):
             if hasattr(self, key):
                 setattr(self, key, value)
@@ -135,9 +136,69 @@ class Operator():
         self.operation_profile = pd.DataFrame()
         cap = self.device.capacity
         for load in residual_load.index:
+            pass
 
 #            if residual_load.loc[load] > 0:
 #                print(residual_load.loc[load])
+ 
+    def charge_storage(self, residual_load):
+        """
+        #TODO: Find better name for this function
+        
+        residual_load > 0 = Energy demand
+        residual_load < 0 = Energy surplus
+        
+        needed from device:                 implemented:
+            device.p_nom                        ()
+            device.efficiency_store             ()
+            device.efficiency_dispatch          ()
+            device.capacity                     (x)
+            device.state_of_charge_initial      (needed?)
+            device.state_of_charge_t            (x)
+            device.time_base                    (x)
+        """
+        if residual_load > 0:
+            #Energy demand --> discharge storage if state_of_charge_t > 0
+            
+            if self.device.state_of_charge_t > 0:
+                #storage is not empty
+
+                self.device.state_of_charge_t -= residual_load * self.time_base
+                
+                #do not discharge below 0 kWh
+                if self.device.state_of_charge_t < 0:
+                    residual_load = self.device.state_of_charge_t / self.time_base * -1
+                    self.device.state_of_charge_t = 0
+                    
+                else:
+                    residual_load = 0
+                    
+            else:
+                return self.device.state_of_charge_t, residual_load
+                
+        elif residual_load < 0:
+            
+            #Energy surplus --> charge storage if state_of_charge_t < capacity 
+            
+            if self.device.state_of_charge_t < self.device.capacity:
+                #storage has not reached its max capacity
+                
+                self.device.state_of_charge_t += residual_load *self.time_base * -1
+                
+                #do not overcharge the storage
+                if self.device.state_of_charge_t > self.device.capacity:
+                    residual_load = (self.device.capacity - 
+                                     self.device.state_of_charge_t) /self.time_base
+                    self.device.state_of_charge_t = self.device.capacity
+                    
+                else:
+                    residual_load = 0
+                    
+            else:
+                #storage has reached its max capacity
+                return self.device.state_of_charge_t, residual_load
+        
+        return self.device.state_of_charge_t, residual_load
 
     def importcsv(self,
                   filename: str,
