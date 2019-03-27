@@ -218,3 +218,6 @@ class Operator():
         profile.index= pd.DatetimeIndex(profile.index)
         assert isinstance(profile, pd.DataFrame)
         setattr(self, profile_name, profile)
+        
+    def dummy(self):
+        pass
