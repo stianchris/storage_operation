@@ -218,3 +218,37 @@ class Operator():
         profile.index= pd.DatetimeIndex(profile.index)
         assert isinstance(profile, pd.DataFrame)
         setattr(self, profile_name, profile)
+        
+    # %%
+def optimized_storage (self, residual_load):
+    
+    """
+    This function defines an optimized use of self-made energy.   
+    The goal is to have a maximized self-sufficiency with maximized self usage
+    
+            +++
+        TODO:
+            Storage Liste erstellen umso Speicherafrage zu ermöglichen
+            Liste für die Lasten erstellen
+            Problem das wenn ein Speicher in den 15 Minuten leer wird kann erst dann eingegriffen werden > dann kann aber auch wieder von PV geladen werden
+            Quartierspeicher am Sonntag wenn der an Leistungsgrenze kommt?
+            Problem mehrere sind leer
+        
+            +++
+    """
+    
+    from numpy import array       
+    profile_list = array([2,3])
+    
+for i in profile_list:  
+
+    storage_list = array([-7,7])
+    storage_list = storage_list + profile_list
+        #Liste aller Speicher und Liste der Lastprofile der Häuser addieren
+        #wenn ein Speicher nun unter 0 fällt muss der vollste einspringen
+    print (min(storage_list))
+    print (max(storage_list))
+    if min(storage_list) =< 0 and min(storage_list) + max(storage_list) > 0:
+        
+        
+            
