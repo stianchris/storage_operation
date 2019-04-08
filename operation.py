@@ -228,27 +228,46 @@ def optimized_storage (self, residual_load):
     
             +++
         TODO:
-            Storage Liste erstellen umso Speicherafrage zu ermöglichen
+            Storage Liste erstellen um so Speicherabfrage zu ermöglichen
             Liste für die Lasten erstellen
             Problem das wenn ein Speicher in den 15 Minuten leer wird kann erst dann eingegriffen werden > dann kann aber auch wieder von PV geladen werden
             Quartierspeicher am Sonntag wenn der an Leistungsgrenze kommt?
             Problem mehrere sind leer
+            Problem vollster kann reicht nicht
         
             +++
     """
     
-    from numpy import array       
-    profile_list = array([2,3])
+from numpy import array       
+import numpy as np
+profile_list = array([-2,3,5])
     
 for i in profile_list:  
-
-    storage_list = array([-7,7])
+    
+    storage_list = array([0,0,0])
     storage_list = storage_list + profile_list
         #Liste aller Speicher und Liste der Lastprofile der Häuser addieren
         #wenn ein Speicher nun unter 0 fällt muss der vollste einspringen
     print (min(storage_list))
     print (max(storage_list))
-    if min(storage_list) =< 0 and min(storage_list) + max(storage_list) > 0:
-        
-        
-            
+         
+    a = storage_list
+    np.where(a==a.min())
+    print(np.where(a==a.min()))
+    np.where(a==a.max())
+    print(np.where(a==a.max()))
+    #gibt die Indexnummern der am wenigst gefüllten Speicher aus
+    
+    #if min(storage_list) =< 0 and min(storage_list) + max(storage_list) > 0 
+    
+    
+    '''
+    Testfunktion
+storage_list = array([0,0,0])
+profile_list = array([-2,3,5])
+a = profile_list
+print([np.where(a==a.min())])
+print([np.where(a==a.max())])
+x =[np.where(a==a.min())]+[np.where(a==a.max())]
+print(x)
+    '''
