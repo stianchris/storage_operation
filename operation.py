@@ -223,7 +223,7 @@ class Operator():
 def optimized_storage (self, residual_load):
     
     """
-    This function defines an optimized use of self-made energy.   
+    This function defines an optimized use of self-made energy   
     The goal is to have a maximized self-sufficiency with maximized self usage
     
             +++
@@ -233,41 +233,51 @@ def optimized_storage (self, residual_load):
             Problem das wenn ein Speicher in den 15 Minuten leer wird kann erst dann eingegriffen werden > dann kann aber auch wieder von PV geladen werden
             Quartierspeicher am Sonntag wenn der an Leistungsgrenze kommt?
             Problem mehrere sind leer
-            Problem vollster kann reicht nicht
-        
+            Problem mehrer leer, mehrere volle
+            Problem mehrere Maxima mit derselben Zahl (!)
             +++
     """
-    
+
 from numpy import array       
 import numpy as np
-profile_list = array([-2,3,5])
+residual_list = array([-20,-15,0,0])
+storage_list = array([0,0,30,30])
+grid_power = 0
+storage_capacity = 10
+#einlesen der csv, dient hier als Ersatz für die Lastprofile
     
-for i in profile_list:  
+#for row in residual_list:  
+    #Die Schleife soll nun alle x Minuten den Stand berechnen
+    #x ist abhängig von "row" also der Liste selber
     
-    storage_list = array([0,0,0])
-    storage_list = storage_list + profile_list
-        #Liste aller Speicher und Liste der Lastprofile der Häuser addieren
-        #wenn ein Speicher nun unter 0 fällt muss der vollste einspringen
-    print (min(storage_list))
-    print (max(storage_list))
-         
-    a = storage_list
-    np.where(a==a.min())
-    print(np.where(a==a.min()))
-    np.where(a==a.max())
-    print(np.where(a==a.max()))
-    #gibt die Indexnummern der am wenigst gefüllten Speicher aus
-    
-    #if min(storage_list) =< 0 and min(storage_list) + max(storage_list) > 0 
-    
-    
-    '''
-    Testfunktion
-storage_list = array([0,0,0])
-profile_list = array([-2,3,5])
-a = profile_list
-print([np.where(a==a.min())])
-print([np.where(a==a.max())])
-x =[np.where(a==a.min())]+[np.where(a==a.max())]
-print(x)
-    '''
+
+storage_list = storage_list + residual_list
+
+a = storage_list
+np.where(a==a.min())
+np.where(a==a.max())
+#Indexnummern der Maxima und Minima
+
+#while max(storage) > storage_capacity:
+    #if 
+while min(storage_list) < 0:
+    #die while Schleife soll schauen das alle Stromspeicher erst geleert werden bevor Netzbezug in betracht gezogen wird.
+    #Diese Betrachtung würde für eine reele maximale Eigennutzung des Stromes sorgen
+    #Überlegung ob billanziell kann später in einer abänderung passieren
+    if min(storage_list) < 0 and max(storage_list) > 0:
+        b = int(storage_list[np.where(a==a.min())] + storage_list[np.where(a==a.max())])
+        c = int(storage_list[np.where(a==a.max())] - storage_list[np.where(a==a.max())])
+        #print(b, c)
+        #addiert das minimum um auf mindestens 0 zu kommen des storages und setzt das maximum auf 0
+        storage_list[np.where(a==a.min())] = b
+        storage_list[np.where(a==a.max())] = c 
+        print(storage_list)
+        #setzt das Maximum und Minimum auf die neuen werte in der Speicher Liste
+    elif min(storage_list) < 0 and max(storage_list) == 0:
+        grid_power = grid_power + (min(storage_list)*-1)     
+        storage_list[np.where(a==a.min())] = 0
+        print("grid", grid_power)
+        print(storage_list)
+    else: 
+        print("wut")
+        break
