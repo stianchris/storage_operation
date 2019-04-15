@@ -232,9 +232,7 @@ def optimized_storage (self, residual_load):
             Liste für die Lasten erstellen
             Problem das wenn ein Speicher in den 15 Minuten leer wird kann erst dann eingegriffen werden > dann kann aber auch wieder von PV geladen werden
             Quartierspeicher am Sonntag wenn der an Leistungsgrenze kommt?
-            Problem mehrere sind leer
-            Problem mehrer leer, mehrere volle
-            Problem mehrere Maxima mit derselben Zahl (!)
+            Problem mehrere Maxima mit derselben Zahl (!) Line 274 addiert Maxima noch auf alle Indizes mit dem Maximum / für minima selbe Problem in 275
             +++
     """
 
@@ -252,7 +250,7 @@ storage_capacity = 10
     
 
 storage_list = storage_list + residual_list
-
+print(storage_list, "Vor der Schleife")
 a = storage_list
 np.where(a==a.min())
 np.where(a==a.max())
@@ -264,19 +262,23 @@ while min(storage_list) < 0:
     #die while Schleife soll schauen das alle Stromspeicher erst geleert werden bevor Netzbezug in betracht gezogen wird.
     #Diese Betrachtung würde für eine reele maximale Eigennutzung des Stromes sorgen
     #Überlegung ob billanziell kann später in einer abänderung passieren
-    if min(storage_list) < 0 and max(storage_list) > 0:
-        b = int(storage_list[np.where(a==a.min())] + storage_list[np.where(a==a.max())])
-        c = int(storage_list[np.where(a==a.max())] - storage_list[np.where(a==a.max())])
+    if min(storage_list) < 0 and max(storage_list) > 0 and len(storage_list[np.where(a==a.max())]) > 1:
+        maximum_list = storage_list[np.where(a==a.max())]
+        minimum_list = storage_list[np.where(a==a.min())]
+        print(maximum_list)
+        print(minimum_list)
+        b = int(minimum_list[0] + maximum_list[0])
+        c = int(maximum_list[0] + minimum_list[0])
         #print(b, c)
         #addiert das minimum um auf mindestens 0 zu kommen des storages und setzt das maximum auf 0
         storage_list[np.where(a==a.min())] = b
         storage_list[np.where(a==a.max())] = c 
         print(storage_list)
-        #setzt das Maximum und Minimum auf die neuen werte in der Speicher Liste
+        #setzt das Maximum und Minimum auf die neuen Werte in der Speicher Liste
     elif min(storage_list) < 0 and max(storage_list) == 0:
         grid_power = grid_power + (min(storage_list)*-1)     
         storage_list[np.where(a==a.min())] = 0
-        print("grid", grid_power)
+        print("necessary grid power =", grid_power)
         print(storage_list)
     else: 
         print("wut")
