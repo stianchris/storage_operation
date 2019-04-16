@@ -238,8 +238,9 @@ def optimized_storage (self, residual_load):
 
 from numpy import array       
 import numpy as np
-residual_list = array([-20,-15,0,0])
-storage_list = array([0,0,30,30])
+from array import *
+residual_list = np.array([20,-15,0,0])
+storage_list = np.array([0,0,30,30])
 grid_power = 0
 storage_capacity = 10
 #einlesen der csv, dient hier als Ersatz für die Lastprofile
@@ -272,7 +273,10 @@ while min(storage_list) < 0:
         #print(b, c)
         #addiert das minimum um auf mindestens 0 zu kommen des storages und setzt das maximum auf 0
         storage_list[np.where(a==a.min())] = b
-        storage_list[np.where(a==a.max())] = c 
+        storage_list = a.tolist()
+        z = storage_list.index(max(storage_list)) 
+        a = np.array(a.tolist())
+        storage_list[z] = c
         print(storage_list)
         #setzt das Maximum und Minimum auf die neuen Werte in der Speicher Liste
     elif min(storage_list) < 0 and max(storage_list) == 0:
