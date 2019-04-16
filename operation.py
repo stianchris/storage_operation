@@ -239,8 +239,8 @@ def optimized_storage (self, residual_load):
 from numpy import array       
 import numpy as np
 from array import *
-residual_list = np.array([20,-15,0,0])
-storage_list = np.array([0,0,30,30])
+residual_list = np.array([-10,-10,0,0,-10])
+storage_list = np.array([0,0,30,30,10])
 grid_power = 0
 storage_capacity = 10
 #einlesen der csv, dient hier als Ersatz für die Lastprofile
@@ -263,19 +263,21 @@ while min(storage_list) < 0:
     #die while Schleife soll schauen das alle Stromspeicher erst geleert werden bevor Netzbezug in betracht gezogen wird.
     #Diese Betrachtung würde für eine reele maximale Eigennutzung des Stromes sorgen
     #Überlegung ob billanziell kann später in einer abänderung passieren
-    if min(storage_list) < 0 and max(storage_list) > 0 and len(storage_list[np.where(a==a.max())]) > 1:
+    if min(storage_list) < 0 and max(storage_list) > 0: #and len(storage_list[np.where(a==a.max())]) > 1:
         maximum_list = storage_list[np.where(a==a.max())]
         minimum_list = storage_list[np.where(a==a.min())]
         print(maximum_list)
         print(minimum_list)
         b = int(minimum_list[0] + maximum_list[0])
-        c = int(maximum_list[0] + minimum_list[0])
-        #print(b, c)
+        #c = int(maximum_list[0] + minimum_list[0])
+        c = 0
+        print(b, c)
         #addiert das minimum um auf mindestens 0 zu kommen des storages und setzt das maximum auf 0
-        storage_list[np.where(a==a.min())] = b
         storage_list = a.tolist()
         z = storage_list.index(max(storage_list)) 
-        a = np.array(a.tolist())
+        y = storage_list.index(min(storage_list))
+        storage_list = np.asarray(a)
+        storage_list[y] = b
         storage_list[z] = c
         print(storage_list)
         #setzt das Maximum und Minimum auf die neuen Werte in der Speicher Liste
