@@ -232,16 +232,17 @@ def optimized_storage (self, residual_load):
             Liste für die Lasten erstellen
             Problem das wenn ein Speicher in den 15 Minuten leer wird kann erst dann eingegriffen werden > dann kann aber auch wieder von PV geladen werden
             Quartierspeicher am Sonntag wenn der an Leistungsgrenze kommt?
-            Problem mehrere Maxima mit derselben Zahl (!) Line 274 addiert Maxima noch auf alle Indizes mit dem Maximum / für minima selbe Problem in 275
             +++
     """
+
 
 from numpy import array       
 import numpy as np
 from array import *
-residual_list = np.array([-10,-10,0,0,-10])
-storage_list = np.array([0,0,30,30,10])
+residual_list = np.array([10,-10,-20,30,10])
+storage_list = np.array([0,0,0,0,0])
 grid_power = 0
+grid_feed = 0
 storage_capacity = 10
 #einlesen der csv, dient hier als Ersatz für die Lastprofile
     
@@ -257,8 +258,6 @@ np.where(a==a.min())
 np.where(a==a.max())
 #Indexnummern der Maxima und Minima
 
-#while max(storage) > storage_capacity:
-    #if 
 while min(storage_list) < 0:
     #die while Schleife soll schauen das alle Stromspeicher erst geleert werden bevor Netzbezug in betracht gezogen wird.
     #Diese Betrachtung würde für eine reele maximale Eigennutzung des Stromes sorgen
@@ -266,12 +265,12 @@ while min(storage_list) < 0:
     if min(storage_list) < 0 and max(storage_list) > 0: #and len(storage_list[np.where(a==a.max())]) > 1:
         maximum_list = storage_list[np.where(a==a.max())]
         minimum_list = storage_list[np.where(a==a.min())]
-        print(maximum_list)
-        print(minimum_list)
-        b = int(minimum_list[0] + maximum_list[0])
-        #c = int(maximum_list[0] + minimum_list[0])
+        #print(maximum_list)
+        #print(minimum_list)
+        b = float(minimum_list[0] + maximum_list[0])
+        #c = float(maximum_list[0] + minimum_list[0])
         c = 0
-        print(b, c)
+        #print(b, c)
         #addiert das minimum um auf mindestens 0 zu kommen des storages und setzt das maximum auf 0
         storage_list = a.tolist()
         z = storage_list.index(max(storage_list)) 
@@ -279,13 +278,38 @@ while min(storage_list) < 0:
         storage_list = np.asarray(a)
         storage_list[y] = b
         storage_list[z] = c
-        print(storage_list)
+        #print(storage_list)
         #setzt das Maximum und Minimum auf die neuen Werte in der Speicher Liste
     elif min(storage_list) < 0 and max(storage_list) == 0:
         grid_power = grid_power + (min(storage_list)*-1)     
         storage_list[np.where(a==a.min())] = 0
         print("necessary grid power =", grid_power)
-        print(storage_list)
+        #print(storage_list)
     else: 
         print("wut")
         break
+    
+while max(storage_list) > storage_capacity:
+   #die 2te while schleife betrachtet den Fall das bei dem Zwischenstand die maximale Speicherkapazität überschritten wird.
+   #Hier wird dann die überflüßige Energie and die nicht vollen Speicher weitergegeben und 
+   #bei vollem Stand ins Netz gespeist
+    if max(storage_list) > min(storage_list) and min(storage_list) < storage_capacity:
+        maximum_list = storage_list[np.where(a==a.max())]
+        minimum_list = storage_list[np.where(a==a.min())] 
+        b = float(maximum_list[0] - storage_capacity + minimum_list[0]) 
+        c = storage_capacity
+        storage_list = a.tolist()
+        z = storage_list.index(max(storage_list)) 
+        y = storage_list.index(min(storage_list))
+        storage_list = np.asarray(a)
+        storage_list[y] = b
+        storage_list[z] = c
+    elif max(storage_list) >storage_capacity and min(storage_list) == storage_capacity:   
+        grid_feed = grid_feed + max(storage_list) - storage_capacity
+        storage_list[np.where(a==a.max())] = storage_capacity
+        print("necessary grid feed in =", grid_feed)
+    else:
+        print("wut 2")
+        break
+print ("Ergebniss der Speicher:", storage_list)
+ 
