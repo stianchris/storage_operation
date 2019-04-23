@@ -228,10 +228,9 @@ def optimized_storage (self, residual_load):
     
             +++
         TODO:
-            Storage Liste erstellen um so Speicherabfrage zu ermöglichen
-            Liste für die Lasten erstellen
-            Problem das wenn ein Speicher in den 15 Minuten leer wird kann erst dann eingegriffen werden > dann kann aber auch wieder von PV geladen werden
+            csv datei einbringen
             Quartierspeicher am Sonntag wenn der an Leistungsgrenze kommt?
+            Lade und Entladeleistung einbringen
             +++
     """
 
@@ -239,8 +238,11 @@ def optimized_storage (self, residual_load):
 from numpy import array       
 import numpy as np
 from array import *
-residual_list = np.array([10,-10,-20,30,10])
-storage_list = np.array([0,0,0,0,0])
+import csv
+import pandas as pd
+from pandas import ExcelWriter
+residual_list = np.array([10,-10,-30,30,10,50,10,-56,-78,10,68,14,-53,7,-66,-4,-87,85,18,91,-100,-100,23])
+storage_list = np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
 grid_power = 0
 grid_feed = 0
 storage_capacity = 10
@@ -250,9 +252,19 @@ storage_capacity = 10
     #Die Schleife soll nun alle x Minuten den Stand berechnen
     #x ist abhängig von "row" also der Liste selber
     
+CSVinput = input('name of the .csv? ')
+f = open(CSVinput,'r')
+reader = csv.reader(f)
+CSVlist = []
+for row in reader:
+    CSVlist.append(row)
+del CSVlist[0]
+CSVlist = [float(l[1]) for l in CSVlist]
+print(CSVlist[1])
+residual = CSVlist[1]
 
 storage_list = storage_list + residual_list
-print(storage_list, "Vor der Schleife")
+print("Beginning:", storage_list)
 a = storage_list
 np.where(a==a.min())
 np.where(a==a.max())
@@ -271,7 +283,6 @@ while min(storage_list) < 0:
         #c = float(maximum_list[0] + minimum_list[0])
         c = 0
         #print(b, c)
-        #addiert das minimum um auf mindestens 0 zu kommen des storages und setzt das maximum auf 0
         storage_list = a.tolist()
         z = storage_list.index(max(storage_list)) 
         y = storage_list.index(min(storage_list))
@@ -279,7 +290,6 @@ while min(storage_list) < 0:
         storage_list[y] = b
         storage_list[z] = c
         #print(storage_list)
-        #setzt das Maximum und Minimum auf die neuen Werte in der Speicher Liste
     elif min(storage_list) < 0 and max(storage_list) == 0:
         grid_power = grid_power + (min(storage_list)*-1)     
         storage_list[np.where(a==a.min())] = 0
@@ -311,5 +321,5 @@ while max(storage_list) > storage_capacity:
     else:
         print("wut 2")
         break
-print ("Ergebniss der Speicher:", storage_list)
+print ("Result of the storages :", storage_list)
  
