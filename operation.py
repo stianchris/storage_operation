@@ -260,7 +260,7 @@ for row in reader:
     CSVlist.append(row)
 del CSVlist[0]
 CSVlist = [float(l[1]) for l in CSVlist]
-print(CSVlist[1])
+print(CSVlist[0])
 residual = CSVlist[1]
 
 storage_list = storage_list + residual_list
