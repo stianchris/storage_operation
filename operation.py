@@ -251,17 +251,18 @@ storage_capacity = 10
 #for row in residual_list:  
     #Die Schleife soll nun alle x Minuten den Stand berechnen
     #x ist abhängig von "row" also der Liste selber
-    
-CSVinput = input('name of the .csv? ')
-f = open(CSVinput,'r')
+
+
+f = open("grid_loadshapes.csv",'r')
 reader = csv.reader(f)
 CSVlist = []
 for row in reader:
     CSVlist.append(row)
 del CSVlist[0]
 CSVlist = [float(l[1]) for l in CSVlist]
-print(CSVlist[0])
+print(CSVlist[])
 residual = CSVlist[1]
+#einlesen der csv und herausnehmen des ersten Indizes
 
 storage_list = storage_list + residual_list
 print("Beginning:", storage_list)
