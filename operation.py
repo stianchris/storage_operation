@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -220,6 +221,12 @@ class Operator():
         setattr(self, profile_name, profile)
         
     # %%
+    
+
+
+
+
+
 def optimized_storage (self, residual_load):
     
     """
@@ -228,9 +235,11 @@ def optimized_storage (self, residual_load):
     
             +++
         TODO:
-            csv datei einbringen
+            csv daten einzeln einbringen und nicht als Matrix sondern mit for Schleife aber wie?
             Quartierspeicher am Sonntag wenn der an Leistungsgrenze kommt?
             Lade und Entladeleistung einbringen
+            Verluste
+            
             +++
     """
 
@@ -241,11 +250,14 @@ from array import *
 import csv
 import pandas as pd
 from pandas import ExcelWriter
-residual_list = np.array([10,-10,-30,30,10,50,10,-56,-78,10,68,14,-53,7,-66,-4,-87,85,18,91,-100,-100,23])
-storage_list = np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-grid_power = 0
-grid_feed = 0
-storage_capacity = 10
+residual_list = np.array([10.0,10.0,-50.0])
+storage_list = np.array([0.0,0.0,0.0])
+grid_power = float(0)
+grid_feed = float(0)
+storage_capacity = float(10)
+efficiency_dispatch = 0.02
+efficiency_store = 0.02
+
 #einlesen der csv, dient hier als Ersatz für die Lastprofile
     
 #for row in residual_list:  
@@ -253,46 +265,47 @@ storage_capacity = 10
     #x ist abhängig von "row" also der Liste selber
 
 
-f = open("grid_loadshapes.csv",'r')
-reader = csv.reader(f)
-CSVlist = []
-for row in reader:
-    CSVlist.append(row)
-del CSVlist[0]
-CSVlist = [float(l[1]) for l in CSVlist]
-print(CSVlist[])
-residual = CSVlist[1]
+#f = open("sum.csv",'r')
+#reader = csv.reader(f)
+#CSVlist = []
+#for row in reader:
+#    CSVlist.append(row)
+#del CSVlist[0]
+#CSVlist = np.asarray(CSVlist)
+#CSVlist = [float(l[1]) for l in CSVlist]
+#print(CSVlist[0])
+#residual = CSVlist[0]
 #einlesen der csv und herausnehmen des ersten Indizes
 
 storage_list = storage_list + residual_list
+for i in range(len(storage_list)):
+    if storage_list[i] > 0.0 :
+        storage_list[i] = storage_list[i] - storage_list[i] * efficiency_store 
+        #Betrachtet die Einspeicherverluiste beim Einspeichern der PV Leistung in die SPeicher
 print("Beginning:", storage_list)
 a = storage_list
-np.where(a==a.min())
-np.where(a==a.max())
-#Indexnummern der Maxima und Minima
 
 while min(storage_list) < 0:
-    #die while Schleife soll schauen das alle Stromspeicher erst geleert werden bevor Netzbezug in betracht gezogen wird.
-    #Diese Betrachtung würde für eine reele maximale Eigennutzung des Stromes sorgen
-    #Überlegung ob billanziell kann später in einer abänderung passieren
+    """
+    die while Schleife soll schauen das alle Stromspeicher erst geleert werden bevor Netzbezug in betracht gezogen wird.
+    Diese Betrachtung würde für eine reele maximale Eigennutzung des Stromes sorgen
+    Überlegung ob billanziell kann später in einer abänderung passieren
+    """
     if min(storage_list) < 0 and max(storage_list) > 0: #and len(storage_list[np.where(a==a.max())]) > 1:
         maximum_list = storage_list[np.where(a==a.max())]
         minimum_list = storage_list[np.where(a==a.min())]
-        #print(maximum_list)
-        #print(minimum_list)
-        b = float(minimum_list[0] + maximum_list[0])
-        #c = float(maximum_list[0] + minimum_list[0])
-        c = 0
-        #print(b, c)
+        b = float(minimum_list[0] + (maximum_list[0] - maximum_list[0] * efficiency_dispatch))
+        c = float(0)
+        print(b, c)
         storage_list = a.tolist()
         z = storage_list.index(max(storage_list)) 
         y = storage_list.index(min(storage_list))
         storage_list = np.asarray(a)
         storage_list[y] = b
         storage_list[z] = c
-        #print(storage_list)
+        print(storage_list)
     elif min(storage_list) < 0 and max(storage_list) == 0:
-        grid_power = grid_power + (min(storage_list)*-1)     
+        grid_power = float(grid_power + (min(storage_list)*-1))     
         storage_list[np.where(a==a.min())] = 0
         print("necessary grid power =", grid_power)
         #print(storage_list)
@@ -301,14 +314,16 @@ while min(storage_list) < 0:
         break
     
 while max(storage_list) > storage_capacity:
-   #die 2te while schleife betrachtet den Fall das bei dem Zwischenstand die maximale Speicherkapazität überschritten wird.
-   #Hier wird dann die überflüßige Energie and die nicht vollen Speicher weitergegeben und 
-   #bei vollem Stand ins Netz gespeist
+    """
+    die 2te while Schleife betrachtet den Fall das bei dem Zwischenstand die maximale Speicherkapazität überschritten wird.
+    Hier wird dann die überflüßige Energie and die nicht vollen Speicher weitergegeben und 
+    bei vollem Stand ins Netz gespeist
+    """
     if max(storage_list) > min(storage_list) and min(storage_list) < storage_capacity:
         maximum_list = storage_list[np.where(a==a.max())]
         minimum_list = storage_list[np.where(a==a.min())] 
         b = float(maximum_list[0] - storage_capacity + minimum_list[0]) 
-        c = storage_capacity
+        c = float(storage_capacity)
         storage_list = a.tolist()
         z = storage_list.index(max(storage_list)) 
         y = storage_list.index(min(storage_list))
@@ -323,4 +338,3 @@ while max(storage_list) > storage_capacity:
         print("wut 2")
         break
 print ("Result of the storages :", storage_list)
- 
