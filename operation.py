@@ -235,7 +235,8 @@ def optimized_storage (self, residual_load):
     
             +++
         TODO:
-            csv daten einzeln einbringen und nicht als Matrix sondern mit for Schleife aber wie?
+            csv daten einzeln einbringen und nicht als Matrix sondern mit for Schleife aber wie? 
+                Einlesen einer CSV mit mehreren Spalten birgt das Problem das eine Zeile als 1 Indize in der Liste genommen wird.
             Quartierspeicher am Sonntag wenn der an Leistungsgrenze kommt?
             Lade und Entladeleistung einbringen
             Verluste
@@ -250,7 +251,7 @@ from array import *
 import csv
 import pandas as pd
 from pandas import ExcelWriter
-residual_list = np.array([10.0,10.0,-50.0])
+residual_list = np.array([10.0,100.0,-50.0])
 storage_list = np.array([0.0,0.0,0.0])
 grid_power = float(0)
 grid_feed = float(0)
@@ -264,24 +265,27 @@ efficiency_store = 0.02
     #Die Schleife soll nun alle x Minuten den Stand berechnen
     #x ist abhängig von "row" also der Liste selber
 
-
-#f = open("sum.csv",'r')
-#reader = csv.reader(f)
-#CSVlist = []
-#for row in reader:
-#    CSVlist.append(row)
-#del CSVlist[0]
-#CSVlist = np.asarray(CSVlist)
-#CSVlist = [float(l[1]) for l in CSVlist]
-#print(CSVlist[0])
-#residual = CSVlist[0]
-#einlesen der csv und herausnehmen des ersten Indizes
+"""
+f = open("sum.csv",'r')
+reader = csv.reader(f)
+CSVlist = []
+for row in reader:
+    CSVlist.append(row)
+del CSVlist[0]
+CSVlist = np.asarray(CSVlist)
+#CSVlist = [float(l[0]) for l in CSVlist]
+print(CSVlist[0])
+residual = CSVlist[0]
+#Einlesen einer CSV mit mehreren Spalten birgt das Problem das eine Zeile als 1 Indize in der Liste genommen wird.
+"""
+df = pd.read_csv('test.csv')
+print(df)
 
 storage_list = storage_list + residual_list
 for i in range(len(storage_list)):
     if storage_list[i] > 0.0 :
         storage_list[i] = storage_list[i] - storage_list[i] * efficiency_store 
-        #Betrachtet die Einspeicherverluiste beim Einspeichern der PV Leistung in die SPeicher
+        #Betrachtet die Einspeicherverluste beim Einspeichern der PV Leistung in die Speicher
 print("Beginning:", storage_list)
 a = storage_list
 
@@ -291,6 +295,7 @@ while min(storage_list) < 0:
     Diese Betrachtung würde für eine reele maximale Eigennutzung des Stromes sorgen
     Überlegung ob billanziell kann später in einer abänderung passieren
     """
+
     if min(storage_list) < 0 and max(storage_list) > 0: #and len(storage_list[np.where(a==a.max())]) > 1:
         maximum_list = storage_list[np.where(a==a.max())]
         minimum_list = storage_list[np.where(a==a.min())]
@@ -338,3 +343,12 @@ while max(storage_list) > storage_capacity:
         print("wut 2")
         break
 print ("Result of the storages :", storage_list)
+
+"""
+Diese Operation ist in der Lage Ergebnisse in eine Excel-Datei zu packen
+
+    df = pd.DataFrame({'storage list':storage_list})
+    writer = ExcelWriter('Ergebnisse.xlsx')
+    df.to_excel(writer,'Sheet1',index=False)
+    writer.save()
+"""
