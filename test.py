@@ -14,3 +14,7 @@ op.importcsv(filename='storage_test_profile.csv', profile_name='profile1')
 # print(op.profile1)
 # print(op.profile1.index)
 op.simple_storage_operation(op.profile1)
+load_profile = [0;0;0]
+
+
+op.self_sufficiency(load_profile)
