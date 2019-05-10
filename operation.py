@@ -51,6 +51,7 @@ class Electrical_storage():
     Parameters are inspired by PyPSA component storage_units.
     """
 
+
     def __init__(self, name, **kwargs):
         """
         Electrical storage class.
@@ -246,6 +247,11 @@ def optimized_storage (self, residual_load):
             Quartierspeicher am Sonntag wenn der an Leistungsgrenze kommt?
             Lade und Entladeleistung einbringen
             Verluste
+             - Parameter und Autor(en) in docstring beschreiben
+             - Parameter in input der Funktion
+             - Test hierzu schreiben
+             - Einlesen von csv-Dateien externalisieren
+             - Ergebnis als return einer Variablen ausgeben
             
             +++
     """
