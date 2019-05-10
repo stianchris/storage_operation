@@ -33,7 +33,13 @@ from pandas import DataFrame
 from pandas.io.parsers import TextFileReader
 from six import iteritems, itervalues, iterkeys
 from six.moves import map
-from weakref import ref
+
+from weakref import reffrom numpy import array       
+import numpy as np
+from array import *
+import csv
+from pandas import ExcelWriter
+
 
 __author__ = "Christian Brosig (TH Köln), ... (TH Köln)"
 __copyright__ = "Copyright 2018-2019 Christian Brosig (TH Köln), ... (TH Köln), GNU GPL 3"
@@ -245,110 +251,105 @@ def optimized_storage (self, residual_load):
     """
 
 
-from numpy import array       
-import numpy as np
-from array import *
-import csv
-import pandas as pd
-from pandas import ExcelWriter
-residual_list = np.array([10.0,100.0,-50.0])
-storage_list = np.array([0.0,0.0,0.0])
-grid_power = float(0)
-grid_feed = float(0)
-storage_capacity = float(10)
-efficiency_dispatch = 0.02
-efficiency_store = 0.02
 
-#einlesen der csv, dient hier als Ersatz für die Lastprofile
-    
-#for row in residual_list:  
-    #Die Schleife soll nun alle x Minuten den Stand berechnen
-    #x ist abhängig von "row" also der Liste selber
+    residual_list = np.array([10.0,100.0,-50.0])
+    storage_list = np.array([0.0,0.0,0.0])
+    grid_power = float(0)
+    grid_feed = float(0)
+    storage_capacity = float(10)
+    efficiency_dispatch = 0.02
+    efficiency_store = 0.02
 
-"""
-f = open("sum.csv",'r')
-reader = csv.reader(f)
-CSVlist = []
-for row in reader:
-    CSVlist.append(row)
-del CSVlist[0]
-CSVlist = np.asarray(CSVlist)
-#CSVlist = [float(l[0]) for l in CSVlist]
-print(CSVlist[0])
-residual = CSVlist[0]
-#Einlesen einer CSV mit mehreren Spalten birgt das Problem das eine Zeile als 1 Indize in der Liste genommen wird.
-"""
-df = pd.read_csv('test.csv')
-print(df)
+    #einlesen der csv, dient hier als Ersatz für die Lastprofile
 
-storage_list = storage_list + residual_list
-for i in range(len(storage_list)):
-    if storage_list[i] > 0.0 :
-        storage_list[i] = storage_list[i] - storage_list[i] * efficiency_store 
-        #Betrachtet die Einspeicherverluste beim Einspeichern der PV Leistung in die Speicher
-print("Beginning:", storage_list)
-a = storage_list
+    #for row in residual_list:  
+        #Die Schleife soll nun alle x Minuten den Stand berechnen
+        #x ist abhängig von "row" also der Liste selber
 
-while min(storage_list) < 0:
     """
-    die while Schleife soll schauen das alle Stromspeicher erst geleert werden bevor Netzbezug in betracht gezogen wird.
-    Diese Betrachtung würde für eine reele maximale Eigennutzung des Stromes sorgen
-    Überlegung ob billanziell kann später in einer abänderung passieren
+    f = open("sum.csv",'r')
+    reader = csv.reader(f)
+    CSVlist = []
+    for row in reader:
+        CSVlist.append(row)
+    del CSVlist[0]
+    CSVlist = np.asarray(CSVlist)
+    #CSVlist = [float(l[0]) for l in CSVlist]
+    print(CSVlist[0])
+    residual = CSVlist[0]
+    #Einlesen einer CSV mit mehreren Spalten birgt das Problem das eine Zeile als 1 Indize in der Liste genommen wird.
     """
+    df = pd.read_csv('test.csv')
+    print(df)
 
-    if min(storage_list) < 0 and max(storage_list) > 0: #and len(storage_list[np.where(a==a.max())]) > 1:
-        maximum_list = storage_list[np.where(a==a.max())]
-        minimum_list = storage_list[np.where(a==a.min())]
-        b = float(minimum_list[0] + (maximum_list[0] - maximum_list[0] * efficiency_dispatch))
-        c = float(0)
-        print(b, c)
-        storage_list = a.tolist()
-        z = storage_list.index(max(storage_list)) 
-        y = storage_list.index(min(storage_list))
-        storage_list = np.asarray(a)
-        storage_list[y] = b
-        storage_list[z] = c
-        print(storage_list)
-    elif min(storage_list) < 0 and max(storage_list) == 0:
-        grid_power = float(grid_power + (min(storage_list)*-1))     
-        storage_list[np.where(a==a.min())] = 0
-        print("necessary grid power =", grid_power)
-        #print(storage_list)
-    else: 
-        print("wut")
-        break
-    
-while max(storage_list) > storage_capacity:
+    storage_list = storage_list + residual_list
+    for i in range(len(storage_list)):
+        if storage_list[i] > 0.0 :
+            storage_list[i] = storage_list[i] - storage_list[i] * efficiency_store 
+            #Betrachtet die Einspeicherverluste beim Einspeichern der PV Leistung in die Speicher
+    print("Beginning:", storage_list)
+    a = storage_list
+
+    while min(storage_list) < 0:
+        """
+        die while Schleife soll schauen das alle Stromspeicher erst geleert werden bevor Netzbezug in betracht gezogen wird.
+        Diese Betrachtung würde für eine reele maximale Eigennutzung des Stromes sorgen
+        Überlegung ob billanziell kann später in einer abänderung passieren
+        """
+
+        if min(storage_list) < 0 and max(storage_list) > 0: #and len(storage_list[np.where(a==a.max())]) > 1:
+            maximum_list = storage_list[np.where(a==a.max())]
+            minimum_list = storage_list[np.where(a==a.min())]
+            b = float(minimum_list[0] + (maximum_list[0] - maximum_list[0] * efficiency_dispatch))
+            c = float(0)
+            print(b, c)
+            storage_list = a.tolist()
+            z = storage_list.index(max(storage_list)) 
+            y = storage_list.index(min(storage_list))
+            storage_list = np.asarray(a)
+            storage_list[y] = b
+            storage_list[z] = c
+            print(storage_list)
+        elif min(storage_list) < 0 and max(storage_list) == 0:
+            grid_power = float(grid_power + (min(storage_list)*-1))     
+            storage_list[np.where(a==a.min())] = 0
+            print("necessary grid power =", grid_power)
+            #print(storage_list)
+        else: 
+            print("wut")
+            break
+
+    while max(storage_list) > storage_capacity:
+        """
+        die 2te while Schleife betrachtet den Fall das bei dem Zwischenstand die maximale Speicherkapazität überschritten wird.
+        Hier wird dann die überflüßige Energie and die nicht vollen Speicher weitergegeben und 
+        bei vollem Stand ins Netz gespeist
+        """
+        if max(storage_list) > min(storage_list) and min(storage_list) < storage_capacity:
+            maximum_list = storage_list[np.where(a==a.max())]
+            minimum_list = storage_list[np.where(a==a.min())] 
+            b = float(maximum_list[0] - storage_capacity + minimum_list[0]) 
+            c = float(storage_capacity)
+            storage_list = a.tolist()
+            z = storage_list.index(max(storage_list)) 
+            y = storage_list.index(min(storage_list))
+            storage_list = np.asarray(a)
+            storage_list[y] = b
+            storage_list[z] = c
+        elif max(storage_list) >storage_capacity and min(storage_list) == storage_capacity:   
+            grid_feed = grid_feed + max(storage_list) - storage_capacity
+            storage_list[np.where(a==a.max())] = storage_capacity
+            print("necessary grid feed in =", grid_feed)
+        else:
+            print("wut 2")
+            break
+    print ("Result of the storages :", storage_list)
+
     """
-    die 2te while Schleife betrachtet den Fall das bei dem Zwischenstand die maximale Speicherkapazität überschritten wird.
-    Hier wird dann die überflüßige Energie and die nicht vollen Speicher weitergegeben und 
-    bei vollem Stand ins Netz gespeist
+    Diese Operation ist in der Lage Ergebnisse in eine Excel-Datei zu packen
+
+        df = pd.DataFrame({'storage list':storage_list})
+        writer = ExcelWriter('Ergebnisse.xlsx')
+        df.to_excel(writer,'Sheet1',index=False)
+        writer.save()
     """
-    if max(storage_list) > min(storage_list) and min(storage_list) < storage_capacity:
-        maximum_list = storage_list[np.where(a==a.max())]
-        minimum_list = storage_list[np.where(a==a.min())] 
-        b = float(maximum_list[0] - storage_capacity + minimum_list[0]) 
-        c = float(storage_capacity)
-        storage_list = a.tolist()
-        z = storage_list.index(max(storage_list)) 
-        y = storage_list.index(min(storage_list))
-        storage_list = np.asarray(a)
-        storage_list[y] = b
-        storage_list[z] = c
-    elif max(storage_list) >storage_capacity and min(storage_list) == storage_capacity:   
-        grid_feed = grid_feed + max(storage_list) - storage_capacity
-        storage_list[np.where(a==a.max())] = storage_capacity
-        print("necessary grid feed in =", grid_feed)
-    else:
-        print("wut 2")
-        break
-print ("Result of the storages :", storage_list)
-
-"""
-Diese Operation ist in der Lage Ergebnisse in eine Excel-Datei zu packen
-
-    df = pd.DataFrame({'storage list':storage_list})
-    writer = ExcelWriter('Ergebnisse.xlsx')
-    df.to_excel(writer,'Sheet1',index=False)
-    writer.save()
-"""
