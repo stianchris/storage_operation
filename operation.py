@@ -43,7 +43,10 @@ class Electrical_storage():
     This class provides the functionalities of an electrical storage.
     Parameters are inspired by PyPSA component storage_units.
     """
-
+    __version__ = 0.0.1
+    # 1.0.0 --> means no more API-changes - a stable release
+    # 0.1.0 --> first stable release
+    # 0.0.1 --> bug-fixes and minor changes
     def __init__(self, name, **kwargs):
         """
         Electrical storage class.
