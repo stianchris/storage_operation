@@ -258,13 +258,12 @@ class Operator():
 #        residual_load = pd.DataFrame({'device1':[10.0],
 #                                     'device2':[100.0],
 #                                     'device3':[-50.0]})
-        residual_list = np.array([4.0,11.0,8.5])
+        residual_list = np.array([8.0,8.0,10.0])
         storage_list = np.array([0.0,0.0,0.0])
-        capacity_list = np.array([5.0,10.0,7.5])
+        capacity_list = np.array([7.0,7.0,9.0])
         
         grid_charge = float(0)
         grid_discharge = float(0)
-        storage_capacity = float(10)
         efficiency_dispatch = 0.02
         efficiency_store = 0.02
     
@@ -301,7 +300,7 @@ class Operator():
         
         capacity_list2 = [x1 - x2 for (x1, x2) in zip(capacity_list, storage_list)] 
         capacity_list2 = np.asarray(capacity_list2)
-        print(capacity_list2)
+        print("capacity_list2", capacity_list2)
         #überprüft ob ein Speicher in der Liste seine Kapazität überschreitet
         #negative Werte Bedeuten das dieser Speicher mit dem Betragswert überfüllt ist
         #capacity_list2 ist der Test ob die speicher voll sind oder nict
@@ -315,23 +314,32 @@ class Operator():
             """
     
             if min(storage_list) < 0 and max(storage_list) > 0: #and len(storage_list[np.where(a==a.max())]) > 1:
+                
+                
                 maximum_list = storage_list[np.where(a==a.max())]
                 minimum_list = storage_list[np.where(a==a.min())]
+                
+                
                 b = float(minimum_list[0] + (maximum_list[0] - maximum_list[0] * efficiency_dispatch))
                 c = float(0)
-                print(b, c)
-                storage_list = a.tolist()
+                
+                
+                storage_list = storage_list.tolist()
                 z = storage_list.index(max(storage_list)) 
                 y = storage_list.index(min(storage_list))
-                storage_list = np.asarray(a)
+                storage_list = np.asarray(storage_list)
+                
+                
                 storage_list[y] = b
                 storage_list[z] = c
-                print(storage_list)
+                
+                
                 capacity_list2 = [x1 - x2 for (x1, x2) in zip(capacity_list, storage_list)] 
                 capacity_list2 = np.asarray(capacity_list2)
                 
+                
             elif min(storage_list) < 0 and max(storage_list) == 0:
-                grid_charge = float(grid_power + (min(storage_list)*-1))     
+                grid_charge = float(grid_charge + (min(storage_list)*-1))     
                 storage_list[np.where(a==a.min())] = 0
                 print("necessary grid_charge =", grid_charge)
                 #print(storage_list)
@@ -348,42 +356,54 @@ class Operator():
             Hier wird dann die überflüßige Energie and die nicht vollen Speicher weitergegeben und 
             bei vollem Stand ins Netz gespeist
             """
-            # Hängt an der if Bedingung fest !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            
             if max(capacity_list2) > 0:
-                maximum_list = capacity_list2[np.where(a==a.max())]
-                minimum_list = storage_list[np.where(a==a.min())] 
                 
                 
+                fempty_list = capacity_list2[np.where(capacity_list2==capacity_list2.max())]
+                full_list = capacity_list2[np.where(capacity_list2==capacity_list2.min())] 
                 
-                b = float(maximum_list[0] *(-1) + minimum_list[0]) 
-                #b ist minimum
+                         
+                storage_list = storage_list.tolist()
+                capacity_list2 = capacity_list2.tolist()
                 
                 
-                storage_list = a.tolist()
-                z = storage_list.index(max(storage_list)) 
-                y = storage_list.index(min(storage_list))
-                storage_list = np.asarray(a)
-                storage_list[y] = b
-                storage_list[z] = capacity_list[z]
+                z = capacity_list2.index(max(capacity_list2)) 
+                y = capacity_list2.index(min(capacity_list2))
+                
+                
+                capacity_list2 = np.asarray(capacity_list2)
+                storage_list = np.asarray(storage_list)
+                
+                
+                storage_list[z] = float(storage_list[z] + full_list[0] * -1) 
+                storage_list[y] = capacity_list[y]
+                
+                
                 capacity_list2 = [x1 - x2 for (x1, x2) in zip(capacity_list, storage_list)] 
                 capacity_list2 = np.asarray(capacity_list2)
-                
+                    
                 
             elif min(capacity_list2) < 0 and max(capacity_list2) < 0:   
+                
+                
                 grid_discharge = sum(capacity_list2)*-1
                 storage_list = capacity_list
+                
+                
                 capacity_list2 = [x1 - x2 for (x1, x2) in zip(capacity_list, storage_list)] 
                 capacity_list2 = np.asarray(capacity_list2)
+                
+                
                 print("necessary grid_discharge =", grid_discharge)
               
-                
-                
+                                
             else:
                 print("wut 2")
                 break
         print ("Result of the storages :", storage_list)
-    
-        return grid_discharge, grid_charge, storage_list
+        print ("Result of the capacity_list2 :", capacity_list2)
+        return grid_discharge, grid_charge, storage_list, capacity_list2
         """
         Diese Operation ist in der Lage Ergebnisse in eine Excel-Datei zu packen
             df = pd.DataFrame({'storage list':storage_list})
