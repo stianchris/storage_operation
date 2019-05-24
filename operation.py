@@ -103,7 +103,7 @@ class Operator():
     """
 
     # %%
-    def __init__(self, name, devices, **kwargs):
+    def __init__(self, name, device, **kwargs):
         """
         Initialization of the Operator class.
         :param string name: Name of the operator.
@@ -113,7 +113,7 @@ class Operator():
         +++
         """
         self.name = name
-        self.devices = devices
+        self.device = device
         self.time_base = 15/60
         for key, value in iteritems(kwargs):
             if hasattr(self, key):
@@ -258,152 +258,149 @@ class Operator():
 #        residual_load = pd.DataFrame({'device1':[10.0],
 #                                     'device2':[100.0],
 #                                     'device3':[-50.0]})
-        residual_list = np.array([8.0,8.0,10.0])
+        print(residual_load)
+        
+        residual_list = np.array([6.0,6.0,10.0])
         storage_list = np.array([0.0,0.0,0.0])
         capacity_list = np.array([7.0,7.0,9.0])
         
+        p_nom_list = np.array([3.0,2.0,5.0])
+        SOC_list = np.array([0.0,0.0,0.0])
+
+        
         grid_charge = float(0)
         grid_discharge = float(0)
-        efficiency_dispatch = 0.02
-        efficiency_store = 0.02
+        efficiency_dispatch = 0.98
+        efficiency_store = 0.98
     
         #einlesen der csv, dient hier als Ersatz für die Lastprofile
     
         #for row in residual_list:  
             #Die Schleife soll nun alle x Minuten den Stand berechnen
             #x ist abhängig von "row" also der Liste selber
-    
-        """
-        f = open("sum.csv",'r')
-        reader = csv.reader(f)
-        CSVlist = []
-        for row in reader:
-            CSVlist.append(row)
-        del CSVlist[0]
-        CSVlist = np.asarray(CSVlist)
-        #CSVlist = [float(l[0]) for l in CSVlist]
-        print(CSVlist[0])
-        residual = CSVlist[0]
-        #Einlesen einer CSV mit mehreren Spalten birgt das Problem das eine Zeile als 1 Indize in der Liste genommen wird.
-        """
 #        df = pd.read_csv('test.csv')
 #        print(df)
-    
-        storage_list = storage_list + residual_list
-        for i in range(len(storage_list)):
-            # if storages['capacity'][i] > 0.0: 
-            if storage_list[i] > 0.0 :
-                storage_list[i] = storage_list[i] - storage_list[i] * efficiency_store 
-                #Betrachtet die Einspeicherverluste beim Einspeichern der PV Leistung in die Speicher
-        print("Beginning:", storage_list)
-        a = storage_list
+            
+        SOC = []  " State of Charge
+        C_n = []  " nominal Capacity of the storages
+        C_t = []  " capacity of the storages at the time t
         
-        capacity_list2 = [x1 - x2 for (x1, x2) in zip(capacity_list, storage_list)] 
-        capacity_list2 = np.asarray(capacity_list2)
-        print("capacity_list2", capacity_list2)
+        
+        for i in range(len(self.device)):
+            C_n.append(self.device[i].capacity) 
+            #print(C_n)
+            SOC.append(self.device[i].state_of_charge_t)
+            #print(SOC)
+            self.device[i].state_of_charge_t = self.device[i].state_of_charge_initial  # set initial SOC as SOC_t 
+## charge or discharge batteries by residual_loads, betrachtet die Einspeicherverluste beim Einspeichern der PV Leistung in die Speicher
+            SOC[i] += residual_load[i]/C_n[i] * efficiency_store    
+            C_t.append(SOC[i] * C_n[i])
+            #print(C_t)
+#        storage_list = storage_list + residual_list
+#        for i in range(len(storage_list)):
+#            # if storages['capacity'][i] > 0.0: 
+#            if storage_list[i] > 0.0 :
+#                storage_list[i] = storage_list[i] - storage_list[i] * efficiency_store 
+        print("Beginning SOC:", SOC)
+                
+        #[x1 - x2 for (x1, x2) in zip(cap_initial, SOC)] 
+        C_t = np.asarray(C_t)
+        C_comparision = capacity_list - C_t
+        print("C_t", C_t)
+        print("C_comparision", C_comparision)
         #überprüft ob ein Speicher in der Liste seine Kapazität überschreitet
         #negative Werte Bedeuten das dieser Speicher mit dem Betragswert überfüllt ist
-        #capacity_list2 ist der Test ob die speicher voll sind oder nict
+        #C_comparision ist der Test ob die speicher voll sind oder nict
         #Capacity_list ist die feststehende Kapazität die sich nicht ändert
     
-        while min(storage_list) < 0:
-            """
-            die while Schleife soll schauen das alle Stromspeicher erst geleert werden bevor Netzbezug in betracht gezogen wird.
-            Diese Betrachtung würde für eine reele maximale Eigennutzung des Stromes sorgen
-            Überlegung ob billanziell kann später in einer abänderung passieren
-            """
-    
-            if min(storage_list) < 0 and max(storage_list) > 0: #and len(storage_list[np.where(a==a.max())]) > 1:
+        while min(C_t) < 0 or min(C_comparision) < 0:
+            "This loop looks into the stroages and checks if they can exchange energy to cover the need or if grid involvement is needed
+
+            print("min(C_t)", min(C_t))
+            print("max(C_t)", max(C_t))
+            print("max(C_comparision)", max(C_comparision))            
+            print("min(C_comparision)", min(C_comparision))
+   
+            if min(C_t) < 0 and max(C_t) > 0:
+                "this statement checks if on storage is empty and if it can be covered with energy from another one without the grid
+                
+                maximum_list = C_t[np.where(C_t==C_t.max())]
+                minimum_list = C_t[np.where(C_t==C_t.min())]
                 
                 
-                maximum_list = storage_list[np.where(a==a.max())]
-                minimum_list = storage_list[np.where(a==a.min())]
+                C_t = C_t.tolist()
+                z = C_t.index(max(C_t)) 
+                y = C_t.index(min(C_t))
+                C_t = np.asarray(C_t)
                 
                 
-                b = float(minimum_list[0] + (maximum_list[0] - maximum_list[0] * efficiency_dispatch))
-                c = float(0)
+                C_t[y] = float(minimum_list[0] + (maximum_list[0] - maximum_list[0] * efficiency_dispatch))
+                C_t[z] = float(0)
                 
                 
-                storage_list = storage_list.tolist()
-                z = storage_list.index(max(storage_list)) 
-                y = storage_list.index(min(storage_list))
-                storage_list = np.asarray(storage_list)
+                C_comparision = capacity_list - C_t 
+                C_comparision = np.asarray(C_comparision)
                 
                 
-                storage_list[y] = b
-                storage_list[z] = c
+            elif min(C_t) < 0 and max(C_t) == 0:
+                "this statement invovles grid energy to charge storages if all other storages are also empty or have demand
                 
-                
-                capacity_list2 = [x1 - x2 for (x1, x2) in zip(capacity_list, storage_list)] 
-                capacity_list2 = np.asarray(capacity_list2)
-                
-                
-            elif min(storage_list) < 0 and max(storage_list) == 0:
-                grid_charge = float(grid_charge + (min(storage_list)*-1))     
-                storage_list[np.where(a==a.min())] = 0
+                grid_charge = float(grid_charge + (min(C_t)*-1))     
+                C_t[np.where(C_t==C_t.min())] = 0
                 print("necessary grid_charge =", grid_charge)
-                #print(storage_list)
-                capacity_list2 = [x1 - x2 for (x1, x2) in zip(capacity_list, storage_list)] 
-                capacity_list2 = np.asarray(capacity_list2)
+                #print(C_t)
+                C_comparision = capacity_list - C_t
+                C_comparision = np.asarray(C_comparision)
                 
-            else: 
-                print("wut")
-                break
-    
-        while min(capacity_list2) < 0:
-            """
-            die 2te while Schleife betrachtet den Fall das bei dem Zwischenstand die maximale Speicherkapazität überschritten wird.
-            Hier wird dann die überflüßige Energie and die nicht vollen Speicher weitergegeben und 
-            bei vollem Stand ins Netz gespeist
-            """
             
-            if max(capacity_list2) > 0:
+            elif max(C_comparision) > 0:
+                "this statement checks if storages are at their full usable capacity and gives all the remaining energy to 
+                "other storages if they still have free capacity
                 
                 
-                fempty_list = capacity_list2[np.where(capacity_list2==capacity_list2.max())]
-                full_list = capacity_list2[np.where(capacity_list2==capacity_list2.min())] 
+                fempty_list = C_comparision[np.where(C_comparision==C_comparision.max())]
+                full_list = C_comparision[np.where(C_comparision==C_comparision.min())] 
                 
                          
-                storage_list = storage_list.tolist()
-                capacity_list2 = capacity_list2.tolist()
+                C_t = C_t.tolist()
+                C_comparision = C_comparision.tolist()
                 
                 
-                z = capacity_list2.index(max(capacity_list2)) 
-                y = capacity_list2.index(min(capacity_list2))
+                z = C_comparision.index(max(C_comparision)) 
+                y = C_comparision.index(min(C_comparision))
                 
                 
-                capacity_list2 = np.asarray(capacity_list2)
-                storage_list = np.asarray(storage_list)
+                C_comparision = np.asarray(C_comparision)
+                C_t = np.asarray(C_t)
                 
                 
-                storage_list[z] = float(storage_list[z] + full_list[0] * -1) 
-                storage_list[y] = capacity_list[y]
+                C_t[z] = float(C_t[z] + full_list[0] * -1) 
+                C_t[y] = capacity_list[y]
                 
                 
-                capacity_list2 = [x1 - x2 for (x1, x2) in zip(capacity_list, storage_list)] 
-                capacity_list2 = np.asarray(capacity_list2)
+                C_comparision = capacity_list - C_t 
+                C_comparision = np.asarray(C_comparision)
                     
                 
-            elif min(capacity_list2) < 0 and max(capacity_list2) < 0:   
+            elif min(C_comparision) < 0 or max(C_comparision) < 0:   
+                "this statement is used when all the sotorages are at their full capacity and puts the remaining energy into the grid
+                
+                grid_discharge = sum(C_comparision)*-1
+                C_t = capacity_list
                 
                 
-                grid_discharge = sum(capacity_list2)*-1
-                storage_list = capacity_list
-                
-                
-                capacity_list2 = [x1 - x2 for (x1, x2) in zip(capacity_list, storage_list)] 
-                capacity_list2 = np.asarray(capacity_list2)
+                C_comparision = capacity_list - C_t 
+                C_comparision = np.asarray(C_comparision)
                 
                 
                 print("necessary grid_discharge =", grid_discharge)
               
                                 
             else:
-                print("wut 2")
                 break
-        print ("Result of the storages :", storage_list)
-        print ("Result of the capacity_list2 :", capacity_list2)
-        return grid_discharge, grid_charge, storage_list, capacity_list2
+        print ("Result of the storages :", C_t)
+        print ("Result of the C_comparision :", C_comparision)
+        return grid_discharge, grid_charge, C_t, C_comparision
         """
         Diese Operation ist in der Lage Ergebnisse in eine Excel-Datei zu packen
             df = pd.DataFrame({'storage list':storage_list})
