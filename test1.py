@@ -8,13 +8,13 @@ Test file to test the functionality of operation.py
 from operation import Electrical_storage, Operator
 import numpy as np
 
-residual_list = np.array([6.0,6.0,12.0])
+residual_list = np.array([6.0,6.0,12.0,9.0])
 
 
 # battery parameters
-p_nom_list = np.array([3.0,2.0,5.0])
-capacity_list = np.array([7.0,7.0,9.0])
-SOC_list = np.array([0.0,0.0,0.0])
+p_nom_list = np.array([4.0,2.0,5.0,3.0])
+capacity_list = np.array([7.0,7.0,9.0,9.0])
+SOC_list = np.array([0.0,0.0,0.0,0.0])
 
 devices = []
 for i in range(len(residual_list)): 
@@ -24,7 +24,7 @@ for i in range(len(residual_list)):
                               state_of_charge_initial = SOC_list[i]))      
 
 op = Operator(name='operator', device=devices)
-op.importcsv(filename='storage_test_profile.csv', profile_name='profile1')
+# op.importcsv(filename='storage_test_profile.csv', profile_name='profile1')
 # print(op.profile1)
 # print(op.profile1.index)
 #grid_discharge, grid_charge, storage_list, capacity_list2 = op.quarter_storage(op.profile1)
