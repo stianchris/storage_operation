@@ -5,7 +5,8 @@
 Test file to test the functionality of operation.py
 """
 
-from operation import Electrical_storage, Operator
+from devices import Electrical_storage
+from operation import Operator
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -28,4 +29,3 @@ for index, load in op.profile1.iterrows():
 print(df.head())
 df.plot(figsize = (9,5))
 plt.show()
-

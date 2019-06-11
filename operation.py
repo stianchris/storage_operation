@@ -37,66 +37,6 @@ from weakref import ref
 __author__ = "Christian Brosig (TH Köln), ... (TH Köln)"
 __copyright__ = "Copyright 2018-2019 Christian Brosig (TH Köln), ... (TH Köln), GNU GPL 3"
 
-
-class Electrical_storage():
-    """
-    This class provides the functionalities of an electrical storage.
-    Parameters are inspired by PyPSA component storage_units.
-    """
-    __version__ = 0.0.1
-    # 1.0.0 --> means no more API-changes - a stable release
-    # 0.1.0 --> first stable release
-    # 0.0.1 --> bug-fixes and minor changes
-    def __init__(self, name, **kwargs):
-        """
-        Electrical storage class.
-
-        :param string name: Name of the storage.
-
-        +++
-        TODO: - write import and export functions and find a way to store these presets
-              - decide how time is implemented!
-              - write proper implementation of kwargs-method and the initialization of params!
-        +++
-        """
-        self.name = name
-        self.storage_type = 'lithium ion'
-        self.efficiency_store = float()  # in per unit
-        self.efficiency_dispatch = float()  # in per unit
-        self.standing_loss = float()  # in per unit
-        self.p_nom = float()  # in kW
-        self.capacity = float()  # in kWh
-        self.investment_costs = float()  # in €/kWh
-        self.operational_costs = float()  # in €/kWh
-        self.state_of_charge_initial = float()  # in kWh?
-        self.state_of_charge_t = float()
-        self.t0 = pd.datetime(year=2015,
-                              month=1,
-                              day=1,
-                              hour=0,
-                              minute=0)
-        self.temperatur_coeff = float()  # placeholder for temperature-curve etc.
-        self.cycles_init = float()
-        self.cycles = float()
-
-        for key, value in iteritems(kwargs):
-            if hasattr(self, key):
-                setattr(self, key, value)
-            else:
-                message = str(self) + " has no attribute {}".format(key)
-                raise AttributeError(message)
-
-
-    def __repr__(self):
-        return("Electrical storage {} of type {}".format(self.name,self.storage_type))
-
-    def import_preset(self, name):
-        pass
-
-    def export_preset(self, name):
-        pass
-
-
 class Operator():
     """
     This class provides functions to operate storages and other devices.
