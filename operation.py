@@ -228,36 +228,18 @@ class Operator():
         
                 +++
             TODO:
-
                 Verluste
                  - Parameter und Autor(en) in docstring beschreiben
                  - Parameter in input der Funktion
                  - Test hierzu schreiben
                  - Einlesen von csv-Dateien externalisieren
                  - Ergebnis als return einer Variablen ausgeben
-                
+                 - Leistung und Grenzen einbauen 
                 +++
         """
-        """
-        # create empty Dataframe with headers for storage parameters
-        storages = pd.DataFrame({'capacity':[],                 
-                                 'p_nom':[],
-                                 'state_of_charge_initial':[]})
-        # read parameter values from all devices and write in DataFrame
-        for i in range(len(self.devices)):  
-            storages = storages.append(pd.DataFrame({'capacity':[self.devices[i].capacity],
-                                                     'p_nom':[self.devices[i].p_nom], 
-                                                     'state_of_charge_initial':[self.devices[i].state_of_charge_initial]}),
-                                       ignore_index=True)
-        """
+        
         print('res', residual_load)
         
-        
-        residual_list = pd.read_excel('sum.xlsx')
-        print(residual_list)
-#        the incoming List in which load and production are already added together (- equals still load left; + means prdouction surplus)
-        
-        #SOC_list = np.array([0.0,0.0,0.0])
 
         grid_charge = float(0)                      #The energy that is needed from the grid
         grid_discharge = float(0)                   #The energy that is put into the grid
@@ -301,143 +283,170 @@ class Operator():
         capacity_list = np.asarray(capacity_list)
         C_comparision = capacity_list - C_t
         print("C_t", C_t)
+        print("capacity_list", capacity_list)
         print("C_comparision", C_comparision)
-        print("capacity", capacity_list)
         #überprüft ob ein Speicher in der Liste seine Kapazität überschreitet
         #negative Werte Bedeuten das dieser Speicher mit dem Betragswert überfüllt ist
         #C_comparision ist der Test ob die speicher voll sind oder nict
         #capacity_list ist die feststehende Kapazität die sich für einen Speicher nicht ändert
 
-        for index, row in residual_list.iterrows():  
-            #Die Schleife soll nun alle x Minuten den Stand berechnen
-            #x ist abhängig von "row" also der Liste selber
+    
+        while min(C_t) < 0 or min(C_comparision) < 0:
+            #This loop looks into the stroages and checks if they can exchange energy to cover the need or if grid involvement is needed
 
-    
-            while min(C_t) < 0 or min(C_comparision) < 0:
-                #This loop looks into the stroages and checks if they can exchange energy to cover the need or if grid involvement is needed
-    
 #            print("min(C_t)", min(C_t))
 #            print("max(C_t)", max(C_t))
 #            print("max(C_comparision)", max(C_comparision))            
 #            print("min(C_comparision)", min(C_comparision))
-                
-                maximum_list = C_t[np.where(C_t==C_t.max())]
-                minimum_list = C_t[np.where(C_t==C_t.min())]
-                
-                #finds all maxima and minima in the comparisions list and makes a list out of it. Makes it possible to deal with many different storages with different power
-       
-                if min(C_t) < 0 and max(C_t) > 0:
-                    
-                    #this statement checks if on storage is empty and if it can be covered with energy from another one without the grid
-                    
             
-                    C_t = C_t.tolist()
-                    y = C_t.index(min(C_t))
-                    z = C_t.index(max(C_t)) 
-                    C_t = np.asarray(C_t)
+            maximum_list = C_t[np.where(C_t==C_t.max())]
+            minimum_list = C_t[np.where(C_t==C_t.min())]
+            #finds all maxima and minima in the comparisions list and makes a list out of it. Makes it possible to deal with many different storages with different power
+            
+            C_comparision = C_comparision.tolist()
+            k = C_comparision.index(max(C_comparision))
+            C_comparision = np.asarray(C_comparision)
+            #print(k)
+            
+            
+            
+#            if C_comparision[k] > capacity_list[k] and max(C_t) > 0:
+#                #checks for empty storages after the loads are applied which  also have some load on their nodes, which are the most critical.
+#            
+#                C_t = C_t.tolist()
+#                z = C_t.index(max(C_t))
+#                C_t = np.asarray(C_t)
+#                
+#                C_t[k] = 0 #der leere Speicher UNTER VORBEHALT DIE 0, muss noch richtig berechnet werden
+#                C_t[z] = C_t[z] + C_t[k]  #der Speicher der abgibt    
+#    
+#                C_comparision = capacity_list - C_t 
+#                C_comparision = np.asarray(C_comparision)
+    
+    
+            if min(C_t) < 0 and max(C_t) > 0:
+                
+                #this statement checks if one storage is empty and if it can be covered with energy from another one without the grid
+                
+        
+                C_t = C_t.tolist()
+                y = C_t.index(min(C_t))
+                z = C_t.index(max(C_t)) 
+                C_t = np.asarray(C_t)
+                
+                #gives the index number of the max and min storage
+                
+                b = float(minimum_list[0]*-1)
+              
+                if p_nom[z] >= b*4 and p_nom[y] >= b*4:
                     
-                    #gives the index number of the max and min storage
+                    #checks if the storages are able to handle the incoming power
                     
-                    b = float(minimum_list[0] + (maximum_list[0] - maximum_list[0] * efficiency))
+                    C_t[y] = C_t[y] + b
+                    C_t[z] = C_t[z] - b
+
                     
-                    if p_nom[z] >= b*4 and p_nom[y] >= b*4:
-                        
-                        #checks if the storages are able to handle the incoming power
-                        
-                        C_t[y] = b
-                        C_t[z] = float(0)
+                elif p_nom[z] < b*4 or p_nom[y] < b*4:
                     
-                    else:
+                    #if the possible storage power is too small it still gives the maximum power but can't fill it in this step
+                    
+                    
+                    if p_nom[z] < C_t[z]:
                         
-                        #if the possible storage power is too small it still gives the maximum power but can't fill it in this step
-                        
+                        # makes sure that there is no "overstepping" in charging when the maximum power is more than the available energy
                         C_t[y] = float(minimum_list[0] + p_nom[z]/4)
                         C_t[z] = float(maximum_list[0] - p_nom[z]/4)
                     
+                    else:
+                        C_t[y] = float(minimum_list[0] + C_t[z])
+                        C_t[z] = 0
+
                     
-                    C_comparision = capacity_list - C_t 
-                    C_comparision = np.asarray(C_comparision)
-                    
-                    
-                elif min(C_t) < 0 and max(C_t) == 0:
-                    
-                    #this statement invovles grid energy to charge storages if all other storages are also empty or have demand
-                    
-    
-                    grid_charge = float(grid_charge + (min(C_t)*-1))     
-                    C_t[np.where(C_t==C_t.min())] = 0
-                    print("necessary grid_charge =", grid_charge)
-                    #print(C_t)
-                    C_comparision = capacity_list - C_t
-                    C_comparision = np.asarray(C_comparision)
-    
-                    
+                C_comparision = capacity_list - C_t 
+                C_comparision = np.asarray(C_comparision)
                 
-                elif max(C_comparision) > 0:
-                    
-                    #this statement checks if storages are at their full usable capacity and gives all the remaining energy to 
-                    #other storages if they still have free capacity
-                    
-                    
-                    full_list = C_comparision[np.where(C_comparision==C_comparision.min())] 
-                    
-                             
-                    C_t = C_t.tolist()
-                    C_comparision = C_comparision.tolist()
-                    
-                    
-                    z = C_comparision.index(max(C_comparision)) 
-                    y = C_comparision.index(min(C_comparision))
-                    
-                    
-                    C_comparision = np.asarray(C_comparision)
-                    C_t = np.asarray(C_t)
-    
-                    
-                    b = full_list[0] * -1
-    
-                    if p_nom[z] >= full_list[0] * -4 and p_nom[y] >= full_list[0] *-4:
                 
-                        C_t[z] = float(C_t[z] + full_list[0] * -1) 
-                        C_t[y] = capacity_list[y]
+            elif min(C_t) < 0 and abs(max(C_t)) < 0.00001:
+                #abs() < 0,00001 equals 0 but takes into consideration that floats are somewhat inaccurate sometimes and can display 10^-16 instead of 0
+                #this statement invovles grid energy to charge storages if all other storages are also empty or have demand
+                
+                grid_charge = float(grid_charge + (min(C_t)*-1))     
+                C_t[np.where(C_t==C_t.min())] = 0
+                print("necessary grid_charge =", grid_charge)
+                #print(C_t)
+                C_comparision = capacity_list - C_t
+                C_comparision = np.asarray(C_comparision)
+ 
+                
+            
+            elif max(C_comparision) > capacity_list[k]:
+                
+                #this statement checks if storages are at their full usable capacity and gives all the remaining energy to 
+                #other storages if they still have free capacity
+                
+                
+                full_list = C_comparision[np.where(C_comparision==C_comparision.min())] 
+                
+                         
+                C_t = C_t.tolist()
+                C_comparision = C_comparision.tolist()
+                
+                
+                z = C_comparision.index(max(C_comparision)) 
+                y = C_comparision.index(min(C_comparision))
+                
+                
+                C_comparision = np.asarray(C_comparision)
+                C_t = np.asarray(C_t)
+
+                """
+                !!! Es minimaler Rechenfehler in den ifs
+                """
+                if p_nom[z] >= full_list[0] * -4 and p_nom[y] >= full_list[0] *-4:
+            
+                    C_t[z] = float(C_t[z] + full_list[0] * -1) 
+                    C_t[y] = capacity_list[y]
+                    #print('4')
+                    
+                    
+                elif p_nom[z] < full_list[0] * -4 or p_nom[y] < full_list[0] *-4:
+                
+
+                    if p_nom[z] < C_t[z]:
+                        
+                        # makes sure that there is no "overstepping" in charging when the maximum power is more than the available energy
+                        C_t[z] = float(C_t[z] + full_list[0] / -4) 
+                        C_t[y] = float(C_t[y] - full_list[0] / -4)
                     
                     else:
-                    
-                        C_t[z] = float(C_t[z] + full_list[0] / -4) 
-                        C_t[y] = float(C_t[y] - full_list[0] / -4) 
-                        
-    
-    
-                    C_comparision = capacity_list - C_t 
-                    C_comparision = np.asarray(C_comparision)
-                    
-                    
-                elif min(C_comparision) < 0 or max(C_comparision) < 0:  
-                    
-                    #this statement is used when all the storages are at their full capacity and puts the remaining energy into the grid
-                    
-                    grid_discharge = sum(C_comparision)*-1
-                    C_t = capacity_list
-                    
-                    
-                    C_comparision = capacity_list - C_t 
-                    C_comparision = np.asarray(C_comparision)
-                    
-                    
-                    print("necessary grid_discharge =", grid_discharge)
+                        C_t[z] = capacity_list[z]
+                        C_t[y] = float(C_t[y] - full_list[0] / -4)
+
+
+                C_comparision = capacity_list - C_t 
+                C_comparision = np.asarray(C_comparision)
                   
-                                    
-                else:
-                    u = u + 1
-                    break
-            print ("Result of the storages :", C_t)
-            print ("Result of the C_comparision :", C_comparision)
-            print(u)
-            return grid_discharge, grid_charge, C_t, C_comparision
-        """
-        Diese Operation ist in der Lage Ergebnisse in eine Excel-Datei zu packen
-            df = pd.DataFrame({'storage list':storage_list})
-            writer = ExcelWriter('Ergebnisse.xlsx')
-            df.to_excel(writer,'Sheet1',index=False)
-            writer.save()
-        """
+                
+            elif min(C_comparision) < 0 or max(C_comparision) <= 0:  
+                
+                #this statement is used when all the storages are at their full capacity and puts the remaining energy into the grid
+                
+                grid_discharge = sum(C_comparision)*-1
+                C_t = capacity_list
+                
+                
+                C_comparision = capacity_list - C_t 
+                C_comparision = np.asarray(C_comparision)
+                
+                
+                print("necessary grid_discharge =", grid_discharge)
+              
+                                
+            else:
+                u = u + 1
+
+                break
+        print ("Result of the storages :", C_t)
+        print ("Result of the C_comparision :", C_comparision)
+        print('u:', u)
+        return grid_discharge, grid_charge, C_t, C_comparision

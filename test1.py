@@ -8,13 +8,13 @@ Test file to test the functionality of operation.py
 from operation import Electrical_storage, Operator
 import numpy as np
 
-#residual_list = pd.read_excel('sum.xlsx')
-
+residual_list = np.array([4.0,5.0,88.0])
+#residual_list = np.array([-5.88,0.0,0.0])
 #22 Households
 # battery parameters
-p_nom_list = np.array([4.0,2.0,5.0,3.0,4.0,2.0,5.0,3.0,4.0,2.0,5.0,3.0,4.0,2.0,5.0,3.0,4.0,2.0,5.0,3.0,4.0,2.0])
-capacity_list = np.array([7.0,7.0,9.0,9.0,7.0,7.0,9.0,9.0,7.0,7.0,9.0,9.0,7.0,7.0,9.0,9.0,7.0,7.0,9.0,9.0,7.0,7.0])
-SOC_list = np.array([0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0])
+p_nom_list = np.array([5.0,5.0,5.0])
+capacity_list = np.array([7.0,7.0,7.0])
+SOC_list = np.array([0.0,0.0,0.0])
 
 devices = []
 for i in range(len(residual_list)): 
