@@ -8,7 +8,7 @@ Test file to test the functionality of operation.py
 from operation import Electrical_storage, Operator
 import numpy as np
 
-residual_list = np.array([4.0,5.0,88.0])
+residual_list = np.array([4.0,4.0,-80.0])
 #residual_list = np.array([-5.88,0.0,0.0])
 #22 Households
 # battery parameters

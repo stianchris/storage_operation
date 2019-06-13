@@ -379,7 +379,7 @@ class Operator():
  
                 
             
-            elif max(C_comparision) > capacity_list[k]:
+            elif  min(C_comparision) < 0:
                 
                 #this statement checks if storages are at their full usable capacity and gives all the remaining energy to 
                 #other storages if they still have free capacity
@@ -399,30 +399,28 @@ class Operator():
                 C_comparision = np.asarray(C_comparision)
                 C_t = np.asarray(C_t)
 
-                """
-                !!! Es minimaler Rechenfehler in den ifs
-                """
+             
                 if p_nom[z] >= full_list[0] * -4 and p_nom[y] >= full_list[0] *-4:
             
                     C_t[z] = float(C_t[z] + full_list[0] * -1) 
                     C_t[y] = capacity_list[y]
-                    #print('4')
+
                     
                     
                 elif p_nom[z] < full_list[0] * -4 or p_nom[y] < full_list[0] *-4:
                 
-
+                    
                     if p_nom[z] < C_t[z]:
                         
                         # makes sure that there is no "overstepping" in charging when the maximum power is more than the available energy
-                        C_t[z] = float(C_t[z] + full_list[0] / -4) 
-                        C_t[y] = float(C_t[y] - full_list[0] / -4)
-                    
-                    else:
-                        C_t[z] = capacity_list[z]
-                        C_t[y] = float(C_t[y] - full_list[0] / -4)
+                        C_t[z] = float(C_t[z] - p_nom[z]/4) 
+                        C_t[y] = float(C_t[y] + p_nom[z]/4)
 
-
+                    else:  
+                        
+                        C_t[z] = float(C_t[z] - C_t[y] -capacity_list[y]) 
+                        C_t[y] = capacity_list[y]
+                        
                 C_comparision = capacity_list - C_t 
                 C_comparision = np.asarray(C_comparision)
                   
